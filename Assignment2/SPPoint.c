@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 struct sp_point_t {
 	int index;
 	int dim;
@@ -27,28 +28,38 @@ SPPoint* spPointCreate(double* data, int dim, int index) {
 }
 SPPoint* spPointCopy(SPPoint* source) {
 	struct sp_point_t *point = malloc(sizeof(SPPoint));
-	memcpy(&point, &source, sizeof(SPPoint))
+	memcpy(&point, &source, sizeof(SPPoint));
 	return point;
 }
 void spPointDestroy(SPPoint* point) {
 	free(point);
 }
 int spPointGetDimension(SPPoint* point) {
-	return 0;
+	return point->dim;
 }
 int spPointGetIndex(SPPoint* point) {
-	return 0;
+	return point->index;
 }
 double spPointGetAxisCoor(SPPoint* point, int axis) {
-	return 0;
+	return point->data[axis];
 }
 double spPointL2SquaredDistance(SPPoint* p, SPPoint* q) {
-	return 0;
+	int index = 0;
+	int size = sizeof(p->data) / sizeof(double);
+	double sum = 0;
+	for (; index < size; index++) {
+		sum += ((p->data[index]) - (q->data[index]))
+				* ((p->data[index]) - (q->data[index]));
+	}
+	return sum;
 }
 
 void main(void) {
 	double data[5] = { 1, 2, 3, 4, 5 };
-	SPPoint *o;
+	SPPoint *o, *o1;
+	o1 = spPointCreate(data, 5, 2);
 	o = spPointCreate(data, 5, 1);
+	printf("%f", spPointGetAxisCoor(o, 4));
+	printf("%f", spPointL2SquaredDistance(o, o1));
 	spPointDestroy(o);
 }
