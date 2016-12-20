@@ -10,15 +10,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-struct sp_point_t {
+#include <assert.h>
+
+typedef struct sp_point_t {
 	int index;
 	int dim;
 	double* data;
 
-};
+} SPPoint;
 
 SPPoint* spPointCreate(double* data, int dim, int index) {
-	struct sp_point_t *point = malloc(sizeof(SPPoint));
+	if (index < 0 || dim <= 0) {
+		return NULL;
+	}
+	SPPoint *point = malloc(sizeof(SPPoint));
 	point->index = index;
 	point->dim = dim;
 	point->data = (double*) malloc(dim * sizeof(double));
@@ -27,11 +32,12 @@ SPPoint* spPointCreate(double* data, int dim, int index) {
 
 }
 SPPoint* spPointCopy(SPPoint* source) {
-	struct sp_point_t *point = malloc(sizeof(SPPoint));
+	SPPoint *point = malloc(sizeof(SPPoint));
 	memcpy(&point, &source, sizeof(SPPoint));
 	return point;
 }
 void spPointDestroy(SPPoint* point) {
+	free(point->data);
 	free(point);
 }
 int spPointGetDimension(SPPoint* point) {

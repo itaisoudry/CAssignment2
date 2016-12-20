@@ -8,11 +8,10 @@
  * TODO Complete documentation
  */
 
-
 /** type used to define Bounded priority queue **/
 typedef struct sp_bp_queue_t SPBPQueue;
 
-typedef strcut sp_bpq_element_t {
+typedef struct sp_bpq_element_t {
 	int index;
 	double value;
 } BPQueueElement;
@@ -27,17 +26,19 @@ typedef enum sp_bp_queue_msg_t {
 } SP_BPQUEUE_MSG;
 
 /**
- * TODO Complete documentation
+ * Creates a new Queue with maximum size maxSize.
+ * @return a new queue
  */
 SPBPQueue* spBPQueueCreate(int maxSize);
 
 /**
- * TODO Complete documentation
+ * Copies the source queue into a new queue.
+ * @return a new queue ( copied from source )
  */
 SPBPQueue* spBPQueueCopy(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Frees memory of source queue ( array that contains the elements ) and frees the queue itself.
  */
 void spBPQueueDestroy(SPBPQueue* source);
 
