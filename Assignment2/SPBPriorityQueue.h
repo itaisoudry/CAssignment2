@@ -43,57 +43,73 @@ SPBPQueue* spBPQueueCopy(SPBPQueue* source);
 void spBPQueueDestroy(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Clears the queue our of elements.
  */
 void spBPQueueClear(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Returns the size of the queue ( how many elements are inside the queue )
+ * @return number of elements inside the queue.
  */
 int spBPQueueSize(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Returns the maximum size of the queue ( the size of the array )
+ * @return the maximum size of the queue
  */
 int spBPQueueGetMaxSize(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Insert a new element to the queue.
+ * The queue is sorted by value, so the new element will be inserted by its value.
  */
 SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value);
 
 /**
- * TODO Complete documentation
+ * Removes the first element from the queue( using only the start pointer )
+ *
  */
 SP_BPQUEUE_MSG spBPQueueDequeue(SPBPQueue* source);
 
-/**
- * TODO Complete documentation
+/**Getting a copy of the first element in the queue.
+ * The first element will be returned into the argument res.
+ *  @return SP_BPQUEUE_SUCCESS if the first element found \ exists
+ * @return SP_BPQUEUE_INVALID_ARGUMENT if res is null
+ * @return SP_BPQUEUE_EMPTY if queue is empty
  */
 SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res);
 
 /**
- * TODO Complete documentation
+ * Getting a copy of the last element in the queue.
+ * The last element will be returned into the argument res.
+ * @return SP_BPQUEUE_SUCCESS if the last element found \ exists
+ * @return SP_BPQUEUE_INVALID_ARGUMENT if res is null
+ * @return SP_BPQUEUE_EMPTY if queue is empty
+ *
  */
 SP_BPQUEUE_MSG spBPQueuePeekLast(SPBPQueue* source, BPQueueElement* res);
 
 /**
- * TODO Complete documentation
+ * Returns the min value in the queue
+ * @return min value found, if not found or error occurred -1.
  */
 double spBPQueueMinValue(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Returns the max value in the queue.
+ * @return max value found, if not found or error occurred -1.
  */
 double spBPQueueMaxValue(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Checks if queue is empty
+ * @return true if queue is empty, false otherwise
  */
 bool spBPQueueIsEmpty(SPBPQueue* source);
 
 /**
- * TODO Complete documentation
+ * Checks if queue is full.
+ * @return true if queue is full, false otherwise.
  */
 bool spBPQueueIsFull(SPBPQueue* source);
 

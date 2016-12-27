@@ -60,12 +60,12 @@ double spPointL2SquaredDistance(SPPoint* p, SPPoint* q) {
 	return sum;
 }
 
-void main(void) {
-	double data[5] = { 1, 2, 3, 4, 5 };
-	SPPoint *o, *o1;
-	o1 = spPointCreate(data, 5, 2);
-	o = spPointCreate(data, 5, 1);
-	printf("%f", spPointGetAxisCoor(o, 4));
-	printf("%f", spPointL2SquaredDistance(o, o1));
-	spPointDestroy(o);
-}
+//void main(void) {
+//	double data[5] = { 1, 2, 3, 4, 5 };
+//	SPPoint *o, *o1;
+//	o1 = spPointCreate(data, 5, 2);
+//	o = spPointCreate(data, 5, 1);
+//	printf("%f", spPointGetAxisCoor(o, 4));
+//	printf("%f", spPointL2SquaredDistance(o, o1));
+//	spPointDestroy(o);
+//}
