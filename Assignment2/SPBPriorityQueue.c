@@ -20,13 +20,14 @@ SPBPQueue* spBPQueueCreate(int maxSize) {
 	if (maxSize < 0) {
 		return NULL;
 	}
-	SPBPQueue *newQueue = malloc(sizeof(SPBPQueue));
+	SPBPQueue *newQueue = (SPBPQueue*) malloc(sizeof(SPBPQueue));
 	if (newQueue == NULL) {
 		return NULL;
 	}
 	newQueue->maxSize = maxSize;
 	newQueue->start = 0;
-	newQueue->queue = malloc(maxSize * sizeof(BPQueueElement));
+	newQueue->queue = (BPQueueElement*) malloc(
+			maxSize * sizeof(BPQueueElement));
 	if (newQueue->queue == NULL) {
 		return NULL;
 	}
@@ -34,26 +35,38 @@ SPBPQueue* spBPQueueCreate(int maxSize) {
 }
 
 SPBPQueue* spBPQueueCopy(SPBPQueue* source) {
-	SPBPQueue *copiedQueue = malloc(sizeof(SPBPQueue));
-	memcpy(&copiedQueue, &source, sizeof(SPBPQueue));
+	SPBPQueue *copiedQueue = spQueueCreate(source->maxSize);
 	return copiedQueue;
 }
 
 void spBPQueueDestroy(SPBPQueue* source) {
-	free(source->queue);
-	free(source);
+	if (source != NULL) {
+		free(source->queue);
+		free(source);
+	}
 }
 
 void spBPQueueClear(SPBPQueue* source) {
-	free(source->queue);
-	source->queue = malloc(sizeof(BPQueueElement));
+	if (source != NULL) {
+		free(source->queue);
+		source->queue = (BPQueueElement*) malloc(sizeof(BPQueueElement));
+		if (source->queue == NULL) {
+			printf("Error allocating memory");
+		}
+	}
 }
 
 int spBPQueueSize(SPBPQueue* source) {
+	if (source == NULL) {
+		return -1;
+	}
 	return source->size;
 }
 
 int spBPQueueGetMaxSize(SPBPQueue* source) {
+	if (source == NULL) {
+		return -1;
+	}
 	return source->maxSize;
 }
 
@@ -61,7 +74,11 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 	int i = source->start, swapIndex, size;
 	int maxSize = source->maxSize;
 	bool found = false;
-	BPQueueElement *newElement = malloc(sizeof(BPQueueElement));
+	BPQueueElement *newElement;
+	if (source == NULL || index < 0) {
+		return SP_BPQUEUE_INVALID_ARGUMENT;
+	}
+	newElement = (BPQueueElement*) (sizeof(BPQueueElement));
 	//we assume that if the allocation didn't succeed is cause of memory problems.
 	if (newElement == NULL) {
 		printf("Error allocating memory");
@@ -111,6 +128,9 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 SP_BPQUEUE_MSG spBPQueueDequeue(SPBPQueue* source) {
 	if (source == NULL)
 		return SP_BPQUEUE_INVALID_ARGUMENT;
+	if(source->size==0){
+		return SP_BPQUEUE_EMPTY;
+	}
 	source->start = (source->start + 1) % source->maxSize;
 	source->size = source->size - 1;
 	return SP_BPQUEUE_SUCCESS;
@@ -145,7 +165,7 @@ double spBPQueueMinValue(SPBPQueue* source) {
 		printf("Invalid argument");
 		return -1;
 	}
-	BPQueueElement *result = malloc(sizeof(BPQueueElement));
+	BPQueueElement *result = (BPQueueElement*) malloc(sizeof(BPQueueElement));
 	if (result == NULL) {
 		printf("Error allocating memory");
 		return -1;
@@ -161,7 +181,7 @@ double spBPQueueMaxValue(SPBPQueue* source) {
 		printf("Invalid argument");
 		return -1;
 	}
-	BPQueueElement *result = malloc(sizeof(BPQueueElement));
+	BPQueueElement *result = (BPQueueElement*) malloc(sizeof(BPQueueElement));
 	if (result == NULL) {
 		printf("Error allocating memory");
 		return -1;
