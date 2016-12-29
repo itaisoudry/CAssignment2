@@ -17,10 +17,19 @@ typedef struct sp_bp_queue_t {
 } SPBPQueue;
 
 SPBPQueue* spBPQueueCreate(int maxSize) {
+	if (maxSize < 0) {
+		return NULL;
+	}
 	SPBPQueue *newQueue = malloc(sizeof(SPBPQueue));
+	if (newQueue == NULL) {
+		return NULL;
+	}
 	newQueue->maxSize = maxSize;
 	newQueue->start = 0;
 	newQueue->queue = malloc(maxSize * sizeof(BPQueueElement));
+	if (newQueue->queue == NULL) {
+		return NULL;
+	}
 	return newQueue;
 }
 

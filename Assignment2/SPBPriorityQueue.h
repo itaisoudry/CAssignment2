@@ -27,7 +27,7 @@ typedef enum sp_bp_queue_msg_t {
 
 /**
  * Creates a new Queue with maximum size maxSize.
- * @return a new queue
+ * @return NULL if maxSize < 0 or one of the memory allocation failed, otherwise a new queue.
  */
 SPBPQueue* spBPQueueCreate(int maxSize);
 
