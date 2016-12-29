@@ -35,7 +35,7 @@ SPBPQueue* spBPQueueCreate(int maxSize) {
 }
 
 SPBPQueue* spBPQueueCopy(SPBPQueue* source) {
-	SPBPQueue *copiedQueue = spQueueCreate(source->maxSize);
+	SPBPQueue *copiedQueue = (SPBPQueue*)spQueueCreate(source->maxSize);
 	return copiedQueue;
 }
 
