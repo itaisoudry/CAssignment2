@@ -92,8 +92,9 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 
 	newElement->index = index;
 	newElement->value = value;
-	size = source->size + 1;
-	swapIndex = size;
+	//actual size is the source size +1 cause size starts from -1 incase of empty array
+	size = source->size+1;
+	swapIndex = size-1;
 	if (size == maxSize) {
 		if (value > (source->queue[size - 1]).value) {
 			return SP_BPQUEUE_FULL;
@@ -110,7 +111,8 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 		if ((source->queue[i]).value > value) {
 			//shift array to the right by one
 			while (swapIndex >= i) {
-				source->queue[swapIndex] = source->queue[swapIndex + 1];
+				source->queue[swapIndex+1].index = source->queue[swapIndex].index;
+				source->queue[swapIndex+1].value = source->queue[swapIndex].value;
 				swapIndex--;
 			}
 			source->queue[i] = *newElement;
@@ -142,7 +144,7 @@ SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res) {
 	if (res == NULL || source == NULL) {
 		return SP_BPQUEUE_INVALID_ARGUMENT;
 	}
-	if (source->size == 0) {
+	if (source->size == -1) {
 		return SP_BPQUEUE_EMPTY;
 	}
 	BPQueueElement* firstElement = &source->queue[source->start];

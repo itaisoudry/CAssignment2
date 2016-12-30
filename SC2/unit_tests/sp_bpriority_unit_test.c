@@ -31,12 +31,14 @@ bool endToEndTest() {
 	ASSERT_TRUE(last->value == 7.0);
 	for (index = 0; index < 5; index++) {
 		resultMsg = spBPQueuePeek(queue, first);
-		printf("%lf", first->value);
+		printf("%lf\n", first->value);
 		resultMsg = spBPQueueDequeue(queue);
 		ASSERT_TRUE(resultMsg == SP_BPQUEUE_SUCCESS);
 	}
 
-	//FREE ALL MEMORY
+	free(first);
+	free(last);
+	spBPQueueDestroy(queue);
 	return true;
 
 }
