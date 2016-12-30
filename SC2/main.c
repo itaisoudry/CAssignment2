@@ -47,7 +47,7 @@ int main1() {
 		spBPQueuePeek(queue, result);
 		spBPQueueDequeue(queue);
 		//print
-		printf("%d",result->index);
+		printf("%d,",result->index+1);
 	}
 	printf("\n");
 	return 0;

@@ -17,6 +17,7 @@ struct sp_bp_queue_t {
 };
 
 SPBPQueue* spBPQueueCreate(int maxSize) {
+	int index = 0;
 	if (maxSize < 0) {
 		return NULL;
 	}
@@ -32,11 +33,35 @@ SPBPQueue* spBPQueueCreate(int maxSize) {
 	if (newQueue->queue == NULL) {
 		return NULL;
 	}
+	//set default index to -1
+	for (index = 0; index < maxSize; index++) {
+		newQueue->queue[index].index = -1;
+	}
 	return newQueue;
 }
 
 SPBPQueue* spBPQueueCopy(SPBPQueue* source) {
-	SPBPQueue *copiedQueue = (SPBPQueue*) spBPQueueCreate(source->maxSize);
+	int index = 0;
+	SPBPQueue *copiedQueue = (SPBPQueue*) malloc(sizeof(SPBPQueue));
+	if (copiedQueue == NULL) {
+		return NULL;
+	}
+	copiedQueue->maxSize = source->maxSize;
+	copiedQueue->start = source->start;
+	copiedQueue->size = source->size;
+	copiedQueue->queue = (BPQueueElement*) malloc(
+			source->maxSize * sizeof(BPQueueElement));
+	if (copiedQueue->queue == NULL) {
+		return NULL;
+	}
+	for (index = 0; index < source->maxSize; index++) {
+		//copy only valid elements.(since we iterate later using modulo size we need to take care of this edge case)
+		if (source->queue[index].index != -1) {
+			copiedQueue->queue[index].index = source->queue[index].index;
+			copiedQueue->queue[index].value = source->queue[index].value;
+		}
+	}
+
 	return copiedQueue;
 }
 
@@ -93,8 +118,8 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 	newElement->index = index;
 	newElement->value = value;
 	//actual size is the source size +1 cause size starts from -1 incase of empty array
-	size = source->size+1;
-	swapIndex = size-1;
+	size = source->size + 1;
+	swapIndex = size - 1;
 	if (size == maxSize) {
 		if (value > (source->queue[size - 1]).value) {
 			return SP_BPQUEUE_FULL;
@@ -111,8 +136,10 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 		if ((source->queue[i]).value > value) {
 			//shift array to the right by one
 			while (swapIndex >= i) {
-				source->queue[swapIndex+1].index = source->queue[swapIndex].index;
-				source->queue[swapIndex+1].value = source->queue[swapIndex].value;
+				source->queue[swapIndex + 1].index =
+						source->queue[swapIndex].index;
+				source->queue[swapIndex + 1].value =
+						source->queue[swapIndex].value;
 				swapIndex--;
 			}
 			source->queue[i] = *newElement;
