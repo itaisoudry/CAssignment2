@@ -10,7 +10,7 @@
 #include "SPPoint.h"
 #include "SPBPriorityQueue.h"
 
-int main() {
+int main1() {
 
 	int n, d, k, pointsIndex, parametersIndex, queueSize;
 	double value;
