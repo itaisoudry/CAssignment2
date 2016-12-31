@@ -35,7 +35,7 @@ SPPoint* getQPoint(int d) {
 
 }
 
-void enqueueElements(SPBPQueue* queue,SPPoint** pointsArray,SPPoint* q,int n) {
+void enqueueElements(SPBPQueue* queue, SPPoint** pointsArray, SPPoint* q, int n) {
 	int pointsIndex;
 	double value;
 	//iterating over points and calculate distance
@@ -55,7 +55,7 @@ void printQueue(SPBPQueue* queue) {
 		spBPQueueDequeue(queue);
 		//print
 		printf("%d", result->index + 1);
-		if(pointsIndex<queueSize-1){
+		if (pointsIndex < queueSize - 1) {
 			printf(",");
 		}
 	}

@@ -20,7 +20,7 @@ struct sp_point_t {
 };
 
 SPPoint* spPointCreate(double* data, int dim, int index) {
-	if (index < 0 || dim <= 0) {
+	if (index < 0 || dim <= 0|| data==NULL) {
 		return NULL;
 	}
 	SPPoint *point = (SPPoint*) malloc(sizeof(SPPoint));

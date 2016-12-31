@@ -5,9 +5,8 @@
  *      Author: soudry
  */
 #include "main_aux.h"
-int main13() {
+int main() {
 	int n, d, k;
-	//will be initialized when the user inputs data
 	SPPoint** pointsArray;
 	SPPoint* q;
 	SPBPQueue* queue;

@@ -93,6 +93,11 @@ bool copyAndEdgeCasesTest() {
 			sizeof(BPQueueElement));
 	BPQueueElement* copyElement = (BPQueueElement*) malloc(
 			sizeof(BPQueueElement));
+	//initialize variables
+	sourceElement->index = 0;
+	sourceElement->value = 0;
+	copyElement->index = 0;
+	copyElement->value = 0;
 	for (index = 0; index < size; index++) {
 		ASSERT_TRUE(sourceElement->index == copyElement->index);
 		ASSERT_TRUE(sourceElement->value == copyElement->value);
@@ -110,7 +115,7 @@ bool copyAndEdgeCasesTest() {
 	return true;
 }
 
-int main3() {
+int main() {
 	RUN_TEST(endToEndTest);
 	RUN_TEST(copyAndEdgeCasesTest);
 
