@@ -128,7 +128,7 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 			(source->queue[size - 1]) = *newElement;
 			return SP_BPQUEUE_SUCCESS;
 		}
-		swapIndex = size - 1;
+		swapIndex--;
 	}
 //while bigger value not found and not finished iterating over array
 	while ((i % maxSize) < size && !found) {
@@ -151,7 +151,8 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 	if (!found) {
 		source->queue[i] = *newElement;
 	}
-	source->size = source->size + 1;
+	if (size < maxSize)
+		source->size = source->size + 1;
 	return SP_BPQUEUE_SUCCESS;
 
 }

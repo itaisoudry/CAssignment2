@@ -5,7 +5,7 @@
  *      Author: soudry
  */
 #include "main_aux.h"
-int main() {
+int main13() {
 	int n, d, k;
 	//will be initialized when the user inputs data
 	SPPoint** pointsArray;

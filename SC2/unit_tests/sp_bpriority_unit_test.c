@@ -110,10 +110,10 @@ bool copyAndEdgeCasesTest() {
 	return true;
 }
 
-
-int main2() {
+int main3() {
 	RUN_TEST(endToEndTest);
 	RUN_TEST(copyAndEdgeCasesTest);
+
 	return 0;
 }
 

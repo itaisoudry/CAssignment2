@@ -48,9 +48,9 @@ void enqueueElements(SPBPQueue* queue,SPPoint** pointsArray,SPPoint* q,int n) {
 void printQueue(SPBPQueue* queue) {
 	int queueSize, pointsIndex;
 	queueSize = spBPQueueSize(queue);
+	BPQueueElement *result = malloc(sizeof(BPQueueElement));
 	for (pointsIndex = 0; pointsIndex < queueSize; pointsIndex++) {
 		//peek
-		BPQueueElement *result = malloc(sizeof(BPQueueElement));
 		spBPQueuePeek(queue, result);
 		spBPQueueDequeue(queue);
 		//print
@@ -60,4 +60,5 @@ void printQueue(SPBPQueue* queue) {
 		}
 	}
 	printf("\n");
+	free(result);
 }
