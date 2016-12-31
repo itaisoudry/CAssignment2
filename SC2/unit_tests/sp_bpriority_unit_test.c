@@ -109,7 +109,9 @@ bool copyAndEdgeCasesTest() {
 
 	return true;
 }
-int main() {
+
+
+int main2() {
 	RUN_TEST(endToEndTest);
 	RUN_TEST(copyAndEdgeCasesTest);
 	return 0;
