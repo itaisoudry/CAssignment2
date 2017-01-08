@@ -1,7 +1,7 @@
-Full Name 1: 
-Id No 1: 
-User Name 1: 
-Full Name 2: 
-Id No 2: 
-User Name 2: 
-Assignment No: 2
+Full Name 1: Itai Soudry
+Id No 1: 303011308
+User Name 1: itaisoudry
+Full Name 2: Ifat Buchman
+Id No 2: 311115042
+User Name 2: ifatbuchman
+Assignment No: 1
