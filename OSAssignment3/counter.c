@@ -87,6 +87,18 @@ int main(int argc, char** argv) {
 
 	}
 
+	//determine proccess id
+	//create named pipe file named “/tmp/counter_PID” and open for writing
+	//get dispatcher proccess id using getppid() function
+	//send USER1 signal to dispatcher
+	// write count into the pipe
+
+	sleep(1);
+
+	close(fd);
+	//close pipe
+	//delete pipe file
+
 	return 0;
 
 }
