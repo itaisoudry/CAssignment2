@@ -10,7 +10,7 @@
 #include "SPPoint.h"
 #include "SPBPriorityQueue.h"
 
-void main() {
+int main() {
 
 	int n, d, k, pointsIndex, parametersIndex, queueSize;
 	double value;
@@ -24,7 +24,7 @@ void main() {
 		double data[d];
 		printf("Please enter %d coordinates for this point", d);
 		for (parametersIndex = 0; parametersIndex < d; parametersIndex++) {
-			scanf("%f", &data[parametersIndex]);
+			scanf("%lf", &data[parametersIndex]);
 		}
 		//reading into q after finishing creating all points.
 		if (pointsIndex == n) {
@@ -47,7 +47,8 @@ void main() {
 		spBPQueuePeek(queue, result);
 		spBPQueueDequeue(queue);
 		//print
-		printf("%d", &result->index);
+		fprintf("%d", &result->index);
 	}
 	printf("\n");
+	return 0;
 }
