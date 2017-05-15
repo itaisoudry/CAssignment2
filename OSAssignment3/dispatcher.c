@@ -10,10 +10,11 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #define MAX_LENGTH 1025
-#define COUNTER_PATH "./counter.c"
+#define COUNTER_PATH "./counter"
 #define PIPE_NAME "/tmp/counter_"
 
 void exitMsg(int exitCode, char* message) {
@@ -25,13 +26,17 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	char pipeName[MAX_LENGTH];
 	char errorMsg[MAX_LENGTH];
 	char buffer[MAX_LENGTH];
-	unsigned long pid = (unsigned long) info->si_pid;
+	char pidStr[MAX_LENGTH];
+	unsigned long pid = info->si_pid;
 	printf("Signal sent from process %lu\n", pid);
 
+	//notify the counter that the dispatcher is free to process data
 	kill(pid, SIGUSR2);
-	//read from pipe
+
+	//create pipe file name
 	strcpy(pipeName, PIPE_NAME);
-	strcat(pipeName, pid);
+	sscanf(pidStr, "%lu", &pid);
+	strcat(pipeName, pidStr);
 
 	int fd = open(pipeName, O_RDONLY);
 	if (fd == -1) {
@@ -44,18 +49,22 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
+	printf("%s", buffer);
 	charCount += atoi(buffer);
 
 	if (close(fd) == -1) {
 		sscanf(errorMsg, "Error: Closing file %s failed: %s\n", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
+	remove(pipeName);
 
 }
 
 pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) {
 	pid_t pid;
-	char* args[5];
+	char* args[6];
+	char sizeStr[MAX_LENGTH];
+	char offsetStr[MAX_LENGTH];
 
 	// read current counter result from the pipe
 	if ((pid = fork()) == -1) {
@@ -64,12 +73,19 @@ pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) 
 	}
 
 	if (pid == 0) { //child
-		strcpy(args[0], COUNTER_PATH);
-		strcpy(args[1], charToCount);
-		strcpy(args[2], filePath);
-		sscanf(args[3], "%zu", offSet);
-		sscanf(args[4], "%zu", size);
+		printf("forkCounter()\n");
+		args[0] = COUNTER_PATH;
+		args[1] = &charToCount;
+		args[2] = filePath;
 
+		sprintf(offsetStr, "%zu", offSet);
+		args[3] = offsetStr;
+
+		sprintf(sizeStr, "%zu", size);
+		args[4] = sizeStr;
+		args[5] = NULL;
+
+		printf("ARGS:%s,%s\n", offsetStr, sizeStr);
 		execv(COUNTER_PATH, args);
 	}
 
@@ -97,10 +113,6 @@ int getNumberOfProcesses(size_t fileSize) {
 		numOfCounterProcesses = fileSize / chunkSize;
 	}
 
-// TODO - delete
-	printf("Number of processes %d\n", numOfCounterProcesses);
-	printf("Chunk size: %d\n", chunkSize);
-
 	return numOfCounterProcesses;
 }
 
@@ -111,7 +123,7 @@ int main(int argc, char** argv) {
 	int pageSize = 0;
 	int numOfCounterProcesses = 0;
 	int pipeFd[2];
-	size_t chuckSize = 0;
+	size_t chunkSize = 0;
 	pid_t pid;
 	struct stat status;
 	struct sigaction new_action;
@@ -145,6 +157,7 @@ int main(int argc, char** argv) {
 
 	}
 	numOfCounterProcesses = getNumberOfProcesses(status.st_size);
+	chunkSize = status.st_size / numOfCounterProcesses;
 
 	memset(&new_action, 0, sizeof(new_action));
 	new_action.sa_sigaction = signalHandler;
@@ -162,8 +175,8 @@ int main(int argc, char** argv) {
 			printf("Signal handle registration failed. %s\n", strerror(errno));
 			return EXIT_FAILURE;
 		}
-
-		pid = forkCounter(charToCount, filePath, 0, 0);
+		//printf("PRE-FORK DATA: %zu , %zu",chunkSize*i,chunkSize);
+		pid = forkCounter(charToCount, filePath, ((chunkSize * i) + 1), chunkSize);
 	}
 
 	wait(NULL);
