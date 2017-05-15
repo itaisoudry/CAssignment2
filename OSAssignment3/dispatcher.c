@@ -20,9 +20,37 @@ void exitMsg(int exitCode, char* message) {
 	printf("%s\n", message);
 	exit(exitCode);
 }
-
+size_t charCount = 0;
 void signalHandler(int signum, siginfo_t* info, void* ptr) {
-	printf("Signal sent from process %lu\n", (unsigned long) info->si_pid);
+	char pipeName[MAX_LENGTH];
+	char errorMsg[MAX_LENGTH];
+	char buffer[MAX_LENGTH];
+	unsigned long pid = (unsigned long) info->si_pid;
+	printf("Signal sent from process %lu\n", pid);
+
+	kill(pid, SIGUSR2);
+	//read from pipe
+	strcpy(pipeName, PIPE_NAME);
+	strcat(pipeName, pid);
+
+	int fd = open(pipeName, O_RDONLY);
+	if (fd == -1) {
+		sscanf(errorMsg, "Error: Cannot open file %s: %s\n", pipeName, strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
+	if (read(fd, buffer, MAX_LENGTH) == -1) {
+		sscanf(errorMsg, "Error: Reading from file %s failed: %s\n", pipeName, strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
+	charCount += atoi(buffer);
+
+	if (close(fd) == -1) {
+		sscanf(errorMsg, "Error: Closing file %s failed: %s\n", pipeName, strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
 }
 
 pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) {
@@ -80,7 +108,6 @@ int main(int argc, char** argv) {
 	char charToCount;
 	char filePath[MAX_LENGTH];
 	char errorMsg[MAX_LENGTH];
-	int totalCharCount = 0;
 	int pageSize = 0;
 	int numOfCounterProcesses = 0;
 	int pipeFd[2];
@@ -100,14 +127,14 @@ int main(int argc, char** argv) {
 	charToCount = argv[1][0];
 	strcpy(filePath, argv[2]);
 
-// open file
+	// open file
 	int fd = open(filePath, O_RDONLY);
 	if (fd < 0) {
 		sscanf(errorMsg, "Error: Cannot move file cursor: %s", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-// get stats for file size
+	// get stats for file size
 	if (fstat(fd, &status) < 0) {
 		sscanf(errorMsg, "Error: Cannot get file stats: %s", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
@@ -130,20 +157,18 @@ int main(int argc, char** argv) {
 
 // for each process until all of them are finished
 	for (int i = 0; i < numOfCounterProcesses; i++) {
-		// open named pipe file called “/tmp/counter_PID” for reading
+
 		if (pipe(pipeFd) == -1) {
 			printf("Signal handle registration failed. %s\n", strerror(errno));
 			return EXIT_FAILURE;
 		}
 
-		pid = forkCounter(charToCount,filePath,0,0);
-
-		// aggregate results to a global data structure
+		pid = forkCounter(charToCount, filePath, 0, 0);
 	}
 
 	wait(NULL);
 
-	printf("The character %c appears %d times in the file\n", charToCount, totalCharCount);
+	printf("The character %c appears %zu times in the file\n", charToCount, charCount);
 
 	return 0;
 }
