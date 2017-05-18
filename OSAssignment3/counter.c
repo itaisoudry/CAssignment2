@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
 	pid = getpid();
 	if (count > 0)
 		printf("Counted %lu in %d\n", count, pid);
+
 	// create named pipe file named “/tmp/counter_PID” and open for writing
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%d", pid);
@@ -89,12 +90,13 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
+	sleep(pid % 16);
+
 	if (kill(getppid(), SIGUSR1) == -1) {
 		sprintf(errorMsg, "Error: Cannot send signal: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	sleep(pid % 16);
 
 	int pipeFd = open(pipeName, O_WRONLY);
 	if (pipeFd == -1) {
@@ -109,7 +111,6 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	sleep(pid % 16);
 
 	//unmap and close after writing
 	if (munmap(arr, length) == -1) {

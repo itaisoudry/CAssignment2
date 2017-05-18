@@ -108,11 +108,11 @@ int getNumberOfProcesses(size_t fileSize, size_t* chunkSize) {
 		while (((((double) fileSize) / (*chunkSize))) > 16.0) {
 			*chunkSize += pageSize;
 		}
-		numOfCounterProcesses = fileSize / (*chunkSize);
+		numOfCounterProcesses = (fileSize / (*chunkSize))+1;
 	}
 
 	printf("Creating %d processes, file size: %zu, chunk size %lu\n", numOfCounterProcesses, fileSize, *chunkSize);
-	return numOfCounterProcesses + 10;
+	return numOfCounterProcesses;
 }
 
 int main(int argc, char** argv) {
@@ -160,6 +160,8 @@ int main(int argc, char** argv) {
 	memset(&new_action, 0, sizeof(new_action));
 	new_action.sa_sigaction = signalHandler;
 	new_action.sa_flags = SA_SIGINFO;
+	sigaction(SIGINT, &new_action, 0);
+	sigaction(SIGTERM, &new_action, 0);
 
 	if ((sigaction(SIGUSR1, &new_action, NULL)) != 0) {
 		printf("Signal handle registration failed. %s\n", strerror(errno));
@@ -177,8 +179,9 @@ int main(int argc, char** argv) {
 		pid = forkCounter(charToCount, filePath, (chunkSize * i), chunkSize);
 	}
 	int st;
-	while (-1 == waitpid(-1, &st, 0)) {
-	}
+
+	for (int i = 0; i < numOfCounterProcesses; i++)
+		while (-1 == waitpid(-1, &st, 0));
 
 	printf("The character %c appears %zu times in the file\n", charToCount, charCount);
 
