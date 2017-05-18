@@ -37,7 +37,7 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%lu", pid);
 	strcat(pipeName, pidStr);
-	printf("%s\n",pipeName);
+	//printf("%s\n",pipeName);
 
 	int fd = open(pipeName, O_RDONLY);
 	if (fd == -1) {
@@ -50,14 +50,13 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	printf("%s", buffer);
+	//printf("RESPONSE: %s\n", buffer);
 	charCount += atoi(buffer);
 
 	if (close(fd) == -1) {
 		sprintf(errorMsg, "Error: Closing file %s failed: %s\n", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
-	remove(pipeName);
 
 }
 
@@ -74,7 +73,6 @@ pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) 
 	}
 
 	if (pid == 0) { //child
-		printf("forkCounter()\n");
 		args[0] = COUNTER_PATH;
 		args[1] = &charToCount;
 		args[2] = filePath;
@@ -86,17 +84,17 @@ pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) 
 		args[4] = sizeStr;
 		args[5] = NULL;
 
-		printf("ARGS:%s,%s\n", offsetStr, sizeStr);
+//		printf("ARGS:%s,%s\n", offsetStr, sizeStr);
 		execv(COUNTER_PATH, args);
 	}
 
 	return pid;
 }
 
-int getNumberOfProcesses(size_t fileSize) {
+int getNumberOfProcesses(size_t fileSize, size_t* chunkSize) {
 	int numOfCounterProcesses = 0;
 	int pageSize = getpagesize();
-	int chunkSize = pageSize;
+	*chunkSize = pageSize;
 
 	if (pageSize <= 0) {  // shouldn't happen, but just in case.
 		exitMsg(EXIT_FAILURE, "Error: Cannot get page size\n");
@@ -107,14 +105,14 @@ int getNumberOfProcesses(size_t fileSize) {
 		numOfCounterProcesses = 1;
 	} else {
 		// calculate chunk size
-		while ((fileSize / chunkSize) > 16) {
-			chunkSize += pageSize;
+		while (((((double) fileSize) / (*chunkSize))) > 16.0) {
+			*chunkSize += pageSize;
 		}
-
-		numOfCounterProcesses = fileSize / chunkSize;
+		numOfCounterProcesses = fileSize / (*chunkSize);
 	}
 
-	return numOfCounterProcesses;
+	printf("Creating %d processes, file size: %zu, chunk size %lu\n", numOfCounterProcesses, fileSize, *chunkSize);
+	return numOfCounterProcesses + 10;
 }
 
 int main(int argc, char** argv) {
@@ -157,8 +155,7 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, "Error: file is empty\n");
 
 	}
-	numOfCounterProcesses = getNumberOfProcesses(status.st_size);
-	chunkSize = status.st_size / numOfCounterProcesses;
+	numOfCounterProcesses = getNumberOfProcesses(status.st_size, &chunkSize);
 
 	memset(&new_action, 0, sizeof(new_action));
 	new_action.sa_sigaction = signalHandler;
@@ -176,11 +173,12 @@ int main(int argc, char** argv) {
 			printf("Signal handle registration failed. %s\n", strerror(errno));
 			return EXIT_FAILURE;
 		}
-		//printf("PRE-FORK DATA: %zu , %zu",chunkSize*i,chunkSize);
-		pid = forkCounter(charToCount, filePath, ((chunkSize * i) + 1), chunkSize);
+		//printf("PRE-FORK DATA: %zu , %zu\n",chunkSize*i,chunkSize);
+		pid = forkCounter(charToCount, filePath, (chunkSize * i), chunkSize);
 	}
-
-	wait(NULL);
+	int st;
+	while (-1 == waitpid(-1, &st, 0)) {
+	}
 
 	printf("The character %c appears %zu times in the file\n", charToCount, charCount);
 
