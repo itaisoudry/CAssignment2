@@ -31,21 +31,22 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	printf("Signal sent from process %lu\n", pid);
 
 	//notify the counter that the dispatcher is free to process data
-	kill(pid, SIGUSR2);
+	//kill(pid, SIGUSR2);
 
 	//create pipe file name
 	strcpy(pipeName, PIPE_NAME);
-	sscanf(pidStr, "%lu", &pid);
+	sprintf(pidStr, "%lu", pid);
 	strcat(pipeName, pidStr);
+	printf("%s\n",pipeName);
 
 	int fd = open(pipeName, O_RDONLY);
 	if (fd == -1) {
-		sscanf(errorMsg, "Error: Cannot open file %s: %s\n", pipeName, strerror(errno));
+		sprintf(errorMsg, "Error: Cannot open file %s: %s\n", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
 	if (read(fd, buffer, MAX_LENGTH) == -1) {
-		sscanf(errorMsg, "Error: Reading from file %s failed: %s\n", pipeName, strerror(errno));
+		sprintf(errorMsg, "Error: Reading from file %s failed: %s\n", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
@@ -53,7 +54,7 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	charCount += atoi(buffer);
 
 	if (close(fd) == -1) {
-		sscanf(errorMsg, "Error: Closing file %s failed: %s\n", pipeName, strerror(errno));
+		sprintf(errorMsg, "Error: Closing file %s failed: %s\n", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 	remove(pipeName);
@@ -142,13 +143,13 @@ int main(int argc, char** argv) {
 	// open file
 	int fd = open(filePath, O_RDONLY);
 	if (fd < 0) {
-		sscanf(errorMsg, "Error: Cannot move file cursor: %s", strerror(errno));
+		sprintf(errorMsg, "Error: Cannot move file cursor: %s", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
 	// get stats for file size
 	if (fstat(fd, &status) < 0) {
-		sscanf(errorMsg, "Error: Cannot get file stats: %s", strerror(errno));
+		sprintf(errorMsg, "Error: Cannot get file stats: %s", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 

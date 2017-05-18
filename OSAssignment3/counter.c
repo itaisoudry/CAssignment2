@@ -29,41 +29,7 @@ void exitMsg(int exitCode, char* message) {
 	exit(exitCode);
 }
 
-int countChar(char charToCount, char buffer[], int bufferSize) {
-	int count = 0;
 
-	for (int i = 0; i < bufferSize; i++) {
-		if (buffer[i] == charToCount)
-			count++;
-	}
-
-	return count;
-}
-
-void signalHandler(int signum, siginfo_t* info, void* ptr) {
-	char pipeName[MAX_LENGTH];
-	char errorMsg[MAX_LENGTH];
-	char countStr[MAX_LENGTH];
-	int fd = 0;
-
-	if ((fd = open(pipeName, O_WRONLY)) == -1) {
-		sscanf(errorMsg, "Error: Cannot open file %s: %s\n", pipeName, strerror(errno));
-		exitMsg(EXIT_FAILURE, errorMsg);
-	}
-
-	sscanf(countStr, "%zu", &count);
-
-	if (write(fd, countStr, sizeof(count)) < 0) {
-		sscanf(errorMsg, "Error: write to file %s failed: %s\n", pipeName, strerror(errno));
-		exitMsg(EXIT_FAILURE, errorMsg);
-	}
-
-	sleep(1);
-
-	close(fd);
-	remove(pipeName);
-
-}
 
 int main(int argc, char** argv) {
 	char filePath[MAX_LENGTH];
@@ -71,6 +37,7 @@ int main(int argc, char** argv) {
 	char charToCount = 0;
 	char pipeName[MAX_LENGTH];
 	char pidStr[MAX_LENGTH];
+	char resultStr[MAX_LENGTH];
 	off_t offSet = 0;
 	size_t length = 0;
 	int fd;
@@ -84,70 +51,73 @@ int main(int argc, char** argv) {
 	printf("THIS IS COUNTER\n");
 	charToCount = argv[1][0];
 	strcpy(filePath, argv[2]);
-	sscanf(argv[3],"%lu",&offSet);
-	sscanf(argv[4],"%zu",&length);
-
-	//set handler
-	memset(&new_action, 0, sizeof(new_action));
-	new_action.sa_sigaction = signalHandler;
-	new_action.sa_flags = SA_SIGINFO;
-
-	//register signal handler
-	if ((sigaction(SIGUSR2, &new_action, NULL)) != 0) {
-		printf("Signal handle registration failed. %s\n", strerror(errno));
-		return EXIT_FAILURE;
-	}
+	sscanf(argv[3], "%lu", &offSet);
+	sscanf(argv[4], "%zu", &length);
 
 	// open file
 	fd = open(filePath, O_RDONLY);
 	if (fd < 0) {
-		sscanf(errorMsg, "Error: Cannot open file: %s", strerror(errno));
+		sprintf(errorMsg, "Error: Cannot open file: %s", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	printf("filePath=%s , offset=%lu, length=%zu\n",filePath,offSet,length);
-	printf("%d\n",fd);
+	printf("filePath=%s , offset=%lu, length=%zu\n", filePath, offSet, length);
+	printf("%d\n", fd);
 
-	arr = (char*) mmap(NULL,length, PROT_READ, MAP_SHARED, fd, 0);
+	arr = (char*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, 0);
 	if (arr == MAP_FAILED) {
-		sscanf(errorMsg, "Error mmapping the file: %s\n", strerror(errno));
+		sprintf(errorMsg, "Error mmapping the file: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
-
-
 
 	// read and count characters
 	for (int i = 0; i < length; i++)
 		if (arr[i] == charToCount)
 			count++;
 
-	//printf("%d\n",count);
-
-	if (munmap(arr, length) == -1) {
-		sscanf(errorMsg, "Error un-mmapping the file: %s\n", strerror(errno));
-		exitMsg(EXIT_FAILURE, errorMsg);
-	}
-	//finished processing number of characters
 	close(fd);
 
 	// determine process id
 	pid = getpid();
+
 	// create named pipe file named “/tmp/counter_PID” and open for writing
 	strcpy(pipeName, PIPE_NAME);
-	sscanf(pidStr, "%d", &pid);
+	sprintf(pidStr, "%d", pid);
 	strcat(pipeName, pidStr);
+	printf("Creating pipe: %s\n",pipeName);
+	if (mkfifo(pipeName, 0666) == -1) {
+		sprintf(errorMsg, "Error: mkfifo failed: %s\n", strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
 
-	printf("OK2\n");
-	if (mkfifo(pipeName, 0644) == -1) {
-		sscanf(errorMsg, "Error: mkfifo failed: %s\n", strerror(errno));
+	sleep(1);
+
+	if(kill(getppid(), SIGUSR1)==-1){
+		sprintf(errorMsg, "Error: Cannot send signal: %s\n", strerror(errno));
+				exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
+	int pipeFd = open(pipeName, O_WRONLY);
+	if (pipeFd == -1) {
+		sprintf(errorMsg, "Error: Cannot open file %s: %s", pipeName, strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
+	sprintf(resultStr, "%zu", count);
+	printf("%s\n",resultStr);
+
+	if (write(pipeFd, resultStr, strlen(resultStr)) == -1) {
+		sprintf(errorMsg, "Error: Cannot write to file %s: %s", pipeName, strerror(errno));
+		exitMsg(EXIT_FAILURE, errorMsg);
+	}
+
+	if (munmap(arr, length) == -1) {
+		sprintf(errorMsg, "Error un-mmapping the file: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
 
-
-	while (1) {
-		kill(getppid(), SIGUSR1);
-	}
+	close(pipeFd);
 
 	return 0;
 }
