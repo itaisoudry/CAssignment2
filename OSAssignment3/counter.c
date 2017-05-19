@@ -22,7 +22,6 @@
 #define PIPE_NAME "/tmp/counter_"
 #define MAX_LENGTH 1024
 #define BUFFER_SIZE 4097
-size_t count = 0;
 
 void exitMsg(int exitCode, char* message) {
 	printf("%s\n", message);
@@ -58,15 +57,13 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	//printf("filePath=%s , offset=%lu, length=%zu , pid=%d\n", filePath, offSet, length,getpid());
-//	printf("%d\n", fd);
-
-	arr = (char*) mmap(NULL, (size_t)length, PROT_READ, MAP_SHARED, fd, offSet);
+	arr = (char*) mmap(NULL, (size_t) length, PROT_READ, MAP_SHARED, fd, offSet);
 	if (arr == MAP_FAILED) {
 		sprintf(errorMsg, "Error mmapping the file: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
+	size_t count = 0;
 	// read and count characters
 	for (int i = 0; i < length; i++)
 		if (arr[i] == charToCount)
@@ -76,28 +73,26 @@ int main(int argc, char** argv) {
 
 	// determine process id
 	pid = getpid();
-	if (count > 0)
-		printf("Counted %lu in %d\n", count, pid);
+	sprintf(resultStr, "%lu", count);
 
 	// create named pipe file named “/tmp/counter_PID” and open for writing
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%d", pid);
 	strcat(pipeName, pidStr);
 
-	//printf("Creating pipe: %s\n", pipeName);
-
 	if (mkfifo(pipeName, 0666) == -1) {
 		sprintf(errorMsg, "Error: mkfifo failed: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
+	//sleep for modulo 16 seconds, this will make almost every process to sleep a different number of seconds
+	//in order to avoid multiple processes sending signals to the dispatcher at once.
 	sleep(pid % 16);
 
 	if (kill(getppid(), SIGUSR1) == -1) {
 		sprintf(errorMsg, "Error: Cannot send signal: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
-	printf("Signal sent pid=%d\n",pid);
 
 	int pipeFd = open(pipeName, O_WRONLY);
 	if (pipeFd == -1) {
@@ -105,15 +100,12 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	sprintf(resultStr, "%zu", count);
-
 	if (write(pipeFd, resultStr, strlen(resultStr)) == -1) {
 		sprintf(errorMsg, "Error: Cannot write to file %s: %s", pipeName, strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-
-	//unmap and close after writing
+	//unmap and close after writing and delete pipe file
 	if (munmap(arr, length) == -1) {
 		sprintf(errorMsg, "Error un-mmapping the file: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
@@ -121,7 +113,6 @@ int main(int argc, char** argv) {
 
 	close(pipeFd);
 	remove(pipeName);
-
 	return 0;
 }
 
