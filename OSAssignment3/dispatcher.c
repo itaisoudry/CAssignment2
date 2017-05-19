@@ -22,6 +22,7 @@ void exitMsg(int exitCode, char* message) {
 	exit(exitCode);
 }
 size_t charCount = 0;
+int signalsCount = 0;
 void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	char pipeName[MAX_LENGTH];
 	char errorMsg[MAX_LENGTH];
@@ -30,7 +31,7 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	unsigned long pid = info->si_pid;
 
 	printf("Signal sent from process %lu\n", pid);
-
+	signalsCount++;
 	//create pipe file name
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%lu", pid);
@@ -103,7 +104,10 @@ int getNumberOfProcesses(size_t fileSize, size_t* chunkSize) {
 		while (((((double) fileSize) / (*chunkSize))) > 16.0) {
 			*chunkSize += pageSize;
 		}
-		numOfCounterProcesses = (fileSize / (*chunkSize))+1;
+		numOfCounterProcesses = (fileSize / (*chunkSize)) + 1;
+
+		if (numOfCounterProcesses > 16)
+			numOfCounterProcesses = 16;  //just to be sure
 	}
 
 	printf("Creating %d processes, file size: %zu, chunk size %lu\n", numOfCounterProcesses, fileSize, *chunkSize);
@@ -117,6 +121,7 @@ int main(int argc, char** argv) {
 	int pageSize = 0;
 	int numOfCounterProcesses = 0;
 	int pipeFd[2];
+	size_t totalSize = 0;
 	size_t chunkSize = 0;
 	pid_t pid;
 	struct stat status;
@@ -161,21 +166,37 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
+	totalSize = status.st_size;
+	size_t originalChunk = chunkSize;
+	int activeProcessCount = 0;
 // for each process until all of them are finished
-	for (int i = 0; i < numOfCounterProcesses; i++) {
+	for (int i = 0; i < numOfCounterProcesses && totalSize > 0; i++) {
+
+		if (totalSize < chunkSize) {
+			printf("Changed total %lu and chunk:%lu\n", totalSize,  chunkSize);
+			chunkSize = totalSize;
+			printf("New Chunk: %lu",chunkSize);
+
+		}
 
 		if (pipe(pipeFd) == -1) {
 			printf("Signal handle registration failed. %s\n", strerror(errno));
 			return EXIT_FAILURE;
 		}
-		pid = forkCounter(charToCount, filePath, (chunkSize * i), chunkSize);
+		pid = forkCounter(charToCount, filePath, (originalChunk * i), chunkSize);
+
+		totalSize -= chunkSize;
+		activeProcessCount++;
+		printf("Fork: %d, total left: %lu\n", pid, totalSize);
 	}
 
+	printf("active process count: %d\n", activeProcessCount);
 	int st;
-	for (int i = 0; i < numOfCounterProcesses; i++)
-		while (-1 == waitpid(-1, &st, 0));
+	for (int i = 0; i < activeProcessCount; i++)
+		while (-1 == waitpid(-1, &st, 0))
+			;
 
 	printf("The character %c appears %zu times in the file\n", charToCount, charCount);
-
+	printf("Num of signals returned: %d\n", signalsCount);
 	return 0;
 }

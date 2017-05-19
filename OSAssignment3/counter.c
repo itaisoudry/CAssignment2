@@ -58,10 +58,10 @@ int main(int argc, char** argv) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	//printf("filePath=%s , offset=%lu, length=%zu\n", filePath, offSet, length);
+	//printf("filePath=%s , offset=%lu, length=%zu , pid=%d\n", filePath, offSet, length,getpid());
 //	printf("%d\n", fd);
 
-	arr = (char*) mmap(NULL, length, PROT_READ, MAP_SHARED, fd, offSet);
+	arr = (char*) mmap(NULL, (size_t)length, PROT_READ, MAP_SHARED, fd, offSet);
 	if (arr == MAP_FAILED) {
 		sprintf(errorMsg, "Error mmapping the file: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%d", pid);
 	strcat(pipeName, pidStr);
+
 	//printf("Creating pipe: %s\n", pipeName);
 
 	if (mkfifo(pipeName, 0666) == -1) {
@@ -96,7 +97,7 @@ int main(int argc, char** argv) {
 		sprintf(errorMsg, "Error: Cannot send signal: %s\n", strerror(errno));
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
-
+	printf("Signal sent pid=%d\n",pid);
 
 	int pipeFd = open(pipeName, O_WRONLY);
 	if (pipeFd == -1) {
