@@ -28,16 +28,13 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 	char buffer[MAX_LENGTH];
 	char pidStr[MAX_LENGTH];
 	unsigned long pid = info->si_pid;
-	printf("Signal sent from process %lu\n", pid);
 
-	//notify the counter that the dispatcher is free to process data
-	//kill(pid, SIGUSR2);
+	printf("Signal sent from process %lu\n", pid);
 
 	//create pipe file name
 	strcpy(pipeName, PIPE_NAME);
 	sprintf(pidStr, "%lu", pid);
 	strcat(pipeName, pidStr);
-	//printf("%s\n",pipeName);
 
 	int fd = open(pipeName, O_RDONLY);
 	if (fd == -1) {
@@ -50,7 +47,6 @@ void signalHandler(int signum, siginfo_t* info, void* ptr) {
 		exitMsg(EXIT_FAILURE, errorMsg);
 	}
 
-	//printf("RESPONSE: %s\n", buffer);
 	charCount += atoi(buffer);
 
 	if (close(fd) == -1) {
@@ -84,7 +80,6 @@ pid_t forkCounter(char charToCount, char* filePath, size_t offSet, size_t size) 
 		args[4] = sizeStr;
 		args[5] = NULL;
 
-//		printf("ARGS:%s,%s\n", offsetStr, sizeStr);
 		execv(COUNTER_PATH, args);
 	}
 
@@ -160,8 +155,6 @@ int main(int argc, char** argv) {
 	memset(&new_action, 0, sizeof(new_action));
 	new_action.sa_sigaction = signalHandler;
 	new_action.sa_flags = SA_SIGINFO;
-	sigaction(SIGINT, &new_action, 0);
-	sigaction(SIGTERM, &new_action, 0);
 
 	if ((sigaction(SIGUSR1, &new_action, NULL)) != 0) {
 		printf("Signal handle registration failed. %s\n", strerror(errno));
@@ -175,11 +168,10 @@ int main(int argc, char** argv) {
 			printf("Signal handle registration failed. %s\n", strerror(errno));
 			return EXIT_FAILURE;
 		}
-		//printf("PRE-FORK DATA: %zu , %zu\n",chunkSize*i,chunkSize);
 		pid = forkCounter(charToCount, filePath, (chunkSize * i), chunkSize);
 	}
-	int st;
 
+	int st;
 	for (int i = 0; i < numOfCounterProcesses; i++)
 		while (-1 == waitpid(-1, &st, 0));
 
